@@ -1,6 +1,6 @@
-# Desafio Técnico Fullstack2 - JTech
+# JTech TaskList - Sistema TODO Multi-usuário
 
-## Sistema TODO List Multi-usuário com Arquitetura Avançada
+Sistema completo de gerenciamento de tarefas com autenticação JWT, desenvolvido com Vue.js 3 e Spring Boot.
 
 ### Contextualização e Objetivo
 
@@ -127,4 +127,124 @@ A **JTech** busca desenvolvedores frontend experientes capazes de construir apli
 
 ---
 
-**Boa sorte! A JTech espera uma solução que demonstre maturidade em desenvolvimento frontend e visão arquitetural.**
+## 📝 Para Avaliadores
+
+### Execução Imediata
+```bash
+# Clone o repositório
+git clone <repository-url>
+cd <repository-name>
+
+# Execute em um comando
+docker-compose up --build
+```
+
+### Arquivos de Apoio para Avaliação
+- `SETUP-AVALIADOR.md` - Instruções detalhadas de setup
+- `CHECKLIST-AVALIADOR.md` - Checklist completo de funcionalidades  
+- `TROUBLESHOOTING.md` - Guia de solução de problemas
+- `validate-setup.sh` - Script de validação de pré-requisitos
+- `start.sh` - Script de inicialização automatizada
+
+### Tempo Estimado de Avaliação
+- **Setup**: 5-7 minutos
+- **Avaliação funcional**: 15-20 minutos
+- **Análise de código**: 10-15 minutos
+- **Total**: 30-45 minutos
+
+**Boa sorte! A JTech espera uma solução que demonstre maturidade em desenvolvimento fullstack e visão arquitetural.**
+
+## 🚀 Execução Rápida para Avaliação
+
+### Pré-requisitos
+- Docker e Docker Compose instalados
+- Portas 5432, 8080 e 5173 disponíveis
+
+### Comando único para executar tudo:
+```bash
+docker-compose up --build
+```
+
+**⏱️ Tempo estimado**: 5-7 minutos do clone até a aplicação rodando
+
+### URLs da aplicação:
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8080
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **Health Check**: http://localhost:8080/actuator/health
+
+### 🔍 Validação e Debug
+```bash
+# Verificar pré-requisitos antes de executar
+./validate-setup.sh
+
+# Ver status dos containers
+docker-compose ps
+
+# Ver logs em tempo real
+docker-compose logs -f
+
+# Debug específico do backend
+./debug-backend.sh
+```
+
+### 🚨 Se o Backend Não Responder
+```bash
+# Teste rápido do Dockerfile
+./test-dockerfile.sh
+
+# Verificar se o container está rodando
+docker-compose ps
+
+# Ver logs do backend
+docker-compose logs backend
+
+# Rebuild se necessário
+docker-compose build --no-cache backend
+docker-compose up backend
+```
+
+### 🛑 Para parar a aplicação
+```bash
+docker-compose down
+```
+
+## 📁 Estrutura do Projeto
+
+```
+├── jtech-tasklist-frontend/     # Vue.js 3 + Vuetify
+├── jtech-tasklist-backend/      # Spring Boot + PostgreSQL
+├── docker-compose.yml           # Orquestração completa
+├── Dockerfile.frontend          # Build do frontend
+├── Dockerfile.backend           # Build do backend
+└── README.md                    # Esta documentação
+```
+
+## 🛠️ Desenvolvimento Local
+
+### Backend (Spring Boot)
+```bash
+cd jtech-tasklist-backend
+./gradlew bootRun
+```
+
+### Frontend (Vue.js)
+```bash
+cd jtech-tasklist-frontend
+npm install
+npm run dev
+```
+
+## 🧪 Testes
+
+### Backend
+```bash
+cd jtech-tasklist-backend
+./gradlew test
+```
+
+### Frontend
+```bash
+cd jtech-tasklist-frontend
+npm run test:unit
+```

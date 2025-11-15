@@ -1,0 +1,19 @@
+# Dockerfile para o Frontend (Vue.js)
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copiar package.json e package-lock.json
+COPY jtech-tasklist-frontend/package*.json ./
+
+# Instalar dependências
+RUN npm install
+
+# Copiar código fonte
+COPY jtech-tasklist-frontend/ .
+
+# Expor porta
+EXPOSE 5173
+
+# Comando para executar em modo desenvolvimento
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

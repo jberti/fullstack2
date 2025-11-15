@@ -1,0 +1,81 @@
+version: '3.3'
+
+services:
+  # Banco de dados PostgreSQL
+  database:
+    image: postgres:15-alpine
+    container_name: tasklist-db
+    environment:
+      POSTGRES_DB: sansys_database
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./jtech-tasklist-backend/src/main/resources/db/migration/V1__create_tables.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - tasklist-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Spring Boot
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: tasklist-backend
+    environment:
+      - PROFILE=dev
+      - DS_URL=database
+      - DS_PORT=5432
+      - DS_DATABASE=sansys_database
+      - DS_USER=postgres
+      - DS_PASS=postgres
+      - PORT=8080
+      - JWT_SECRET=mySecretKeyForJWTTokenGenerationThatMustBeAtLeast256BitsLongForSecurity
+      - JWT_EXPIRATION=86400000
+      - JWT_REFRESH_EXPIRATION=604800000
+      - SPRING_PROFILES_ACTIVE=dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+    networks:
+      - tasklist-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Frontend Vue.js
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: tasklist-frontend
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080/api/v1
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - tasklist-network
+    volumes:
+      - ./jtech-tasklist-frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+
+networks:
+  tasklist-network:
+    driver: bridge

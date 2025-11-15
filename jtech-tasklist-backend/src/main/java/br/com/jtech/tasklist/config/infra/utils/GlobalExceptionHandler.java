@@ -9,7 +9,7 @@
  * Information and shall use it only in accordance with the terms of the
  * license agreement you entered into with J-Tech.
  */
-package br.com.jtech.tasklist.config.infra.handlers;
+package br.com.jtech.tasklist.config.infra.utils;
 
 
 
@@ -63,6 +63,31 @@ public class GlobalExceptionHandler {
 
         }
         return errors;
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiError> handleBusinessException(BusinessException ex) {
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST);
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(LocalDateTime.now());
+        return buildResponseEntity(error);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiError> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        ApiError error = new ApiError(HttpStatus.NOT_FOUND);
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(LocalDateTime.now());
+        return buildResponseEntity(error);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleGenericException(Exception ex) {
+        ApiError error = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR);
+        error.setMessage("An unexpected error occurred");
+        error.setTimestamp(LocalDateTime.now());
+        error.setDebugMessage(ex.getLocalizedMessage());
+        return buildResponseEntity(error);
     }
 
 }

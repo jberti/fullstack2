@@ -1,0 +1,46 @@
+# Dockerfile para o Backend (Spring Boot)
+FROM amazoncorretto:21
+
+# Instalar curl e netstat para debug
+RUN yum update -y && yum install -y curl net-tools && yum clean all
+
+WORKDIR /app
+
+# Copiar arquivos do Gradle
+COPY jtech-tasklist-backend/gradle/ gradle/
+COPY jtech-tasklist-backend/gradlew .
+COPY jtech-tasklist-backend/gradlew.bat .
+COPY jtech-tasklist-backend/build.gradle .
+COPY jtech-tasklist-backend/gradle.properties .
+
+# Dar permissão de execução ao gradlew
+RUN chmod +x ./gradlew
+
+# Copiar código fonte
+COPY jtech-tasklist-backend/src/ src/
+
+# Build da aplicação
+RUN ./gradlew clean bootJar -x test --no-daemon
+
+# Debug: Listar arquivos JAR
+RUN echo "=== Arquivos JAR gerados ===" && ls -la build/libs/
+
+# Copiar o JAR principal
+RUN JAR_NAME=$(ls build/libs/ | grep -v plain | head -1) && \
+    echo "Copiando JAR: $JAR_NAME" && \
+    cp "build/libs/$JAR_NAME" app.jar
+
+# Verificar se o JAR foi criado
+RUN ls -la app.jar && echo "JAR criado com sucesso!"
+
+# Expor porta
+EXPOSE 8080
+
+# Configurar variáveis de ambiente
+ENV JAVA_OPTS="-Xmx512m -Xms256m"
+ENV SPRING_PROFILES_ACTIVE=dev
+ENV SERVER_PORT=8080
+ENV LOGGING_LEVEL_ROOT=INFO
+
+# Comando para executar a aplicação com logs mais verbosos
+CMD ["sh", "-c", "echo 'Iniciando Spring Boot...' && java $JAVA_OPTS -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Dserver.port=$SERVER_PORT -Dlogging.level.root=$LOGGING_LEVEL_ROOT -Dlogging.level.org.springframework.boot=INFO -jar app.jar"]

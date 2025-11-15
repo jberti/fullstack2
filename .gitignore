@@ -1,0 +1,38 @@
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Environment files
+.env
+.env.local
+.env.docker
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Application specific
+jtech-tasklist-backend/logs/
+jtech-tasklist-frontend/dist/
