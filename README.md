@@ -100,7 +100,6 @@ docker-compose down -v
 ### DevOps
 - **Docker** - Containerização
 - **Docker Compose** - Orquestração
-- **Nginx** - Proxy reverso (produção)
 
 ## 📋 Funcionalidades
 
@@ -209,8 +208,6 @@ jtech-tasklist/
 ├── 🐳 docker-compose.prod.yml          # Configuração de produção
 ├── 🐳 Dockerfile.backend               # Container do backend
 ├── 🐳 Dockerfile.frontend              # Container do frontend
-├── 🚀 docker-start.sh                  # Script de inicialização Linux/macOS
-├── 🚀 docker-start.bat                 # Script de inicialização Windows
 └── 📖 README.md                        # Documentação principal
 ```
 
@@ -562,24 +559,4 @@ jtech-tasklist-frontend/
 - **Task Completion**: > 70% task completion rate
 - **User Satisfaction**: > 4.5/5 rating
 - **Growth**: 20% monthly user growth
-
----
-
-## 📞 Suporte e Contato
-
-### Documentação Adicional
-- **API Documentation**: http://localhost:8080/swagger-ui/index.html
-- **Frontend Storybook**: (Planejado)
-- **Architecture Decision Records**: `/docs/adr/`
-
-### Contribuição
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
-### Licença
-Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
 ---
