@@ -208,8 +208,6 @@ jtech-tasklist/
 ├── 🐳 docker-compose.prod.yml          # Configuração de produção
 ├── 🐳 Dockerfile.backend               # Container do backend
 ├── 🐳 Dockerfile.frontend              # Container do frontend
-├── 🚀 docker-start.sh                  # Script de inicialização Linux/macOS
-├── 🚀 docker-start.bat                 # Script de inicialização Windows
 └── 📖 README.md                        # Documentação principal
 ```
 
