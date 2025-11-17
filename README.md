@@ -101,6 +101,45 @@ docker-compose down -v
 - **Docker** - Containerização
 - **Docker Compose** - Orquestração
 
+## 🏗️ Arquitetura do Sistema
+
+```mermaid
+graph TB
+    subgraph "🎨 Frontend - Vue.js"
+        UI[📱 Views & Components]
+        STORE[🗃️ Pinia Stores]
+        SERVICES[🔌 API Services]
+        ROUTER[🛣️ Vue Router]
+    end
+    
+    subgraph "⚙️ Backend - Spring Boot"
+        CONTROLLERS[🎯 Controllers]
+        SECURITY[🔐 Spring Security]
+        BUSINESS[💼 Services]
+        REPOS[📊 Repositories]
+    end
+    
+    subgraph "💾 Database"
+        POSTGRES[(🐘 PostgreSQL)]
+        TABLES[📋 Tables: users, tasklists, tasks]
+    end
+    
+    UI --> STORE
+    STORE --> SERVICES
+    SERVICES --> CONTROLLERS
+    CONTROLLERS --> SECURITY
+    SECURITY --> BUSINESS
+    BUSINESS --> REPOS
+    REPOS --> POSTGRES
+    POSTGRES --> TABLES
+    
+    ROUTER -.-> UI
+    
+    style UI fill:#42b883,stroke:#2c3e50,stroke-width:2px
+    style CONTROLLERS fill:#6db33f,stroke:#2c3e50,stroke-width:2px
+    style POSTGRES fill:#336791,stroke:#2c3e50,stroke-width:2px
+```
+
 ## 📋 Funcionalidades
 
 - ✅ Autenticação JWT
