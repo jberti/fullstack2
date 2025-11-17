@@ -2,6 +2,7 @@ package br.com.jtech.tasklist.controller;
 
 import br.com.jtech.tasklist.dto.TaskRequest;
 import br.com.jtech.tasklist.dto.TaskResponse;
+import br.com.jtech.tasklist.dto.TaskUpdateRequest;
 import br.com.jtech.tasklist.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -65,7 +66,7 @@ public class TaskController {
     @Operation(summary = "Atualizar tarefa")
     public ResponseEntity<TaskResponse> updateTask(
             @PathVariable UUID id,
-            @Valid @RequestBody TaskRequest request,
+            @Valid @RequestBody TaskUpdateRequest request,
             Authentication authentication) {
         UUID userId = getUserId(authentication);
         TaskResponse task = taskService.update(id, request, userId);

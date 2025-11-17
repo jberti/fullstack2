@@ -2,6 +2,7 @@ package br.com.jtech.tasklist.service;
 
 import br.com.jtech.tasklist.dto.TaskRequest;
 import br.com.jtech.tasklist.dto.TaskResponse;
+import br.com.jtech.tasklist.dto.TaskUpdateRequest;
 import br.com.jtech.tasklist.entity.Task;
 import br.com.jtech.tasklist.entity.Tasklist;
 import br.com.jtech.tasklist.entity.User;
@@ -54,6 +55,10 @@ public class TaskService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        if (request.getTasklistId() == null) {
+            throw new ResourceNotFoundException("Tasklist not found");
+        }
+
         Tasklist tasklist = tasklistRepository.findByIdAndUserId(request.getTasklistId(), userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tasklist not found"));
 
@@ -83,6 +88,18 @@ public class TaskService {
                     .orElseThrow(() -> new ResourceNotFoundException("Tasklist not found"));
             task.setTasklist(newTasklist);
         }
+
+        Task updatedTask = taskRepository.save(task);
+        return toResponse(updatedTask);
+    }
+
+    public TaskResponse update(UUID id, TaskUpdateRequest request, UUID userId) {
+        Task task = taskRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+
+        task.setTitle(request.getTitle());
+        task.setDescription(request.getDescription());
+        task.setCompleted(request.getCompleted() != null ? request.getCompleted() : task.getCompleted());
 
         Task updatedTask = taskRepository.save(task);
         return toResponse(updatedTask);

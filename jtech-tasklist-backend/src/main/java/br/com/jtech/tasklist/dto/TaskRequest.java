@@ -1,7 +1,6 @@
 package br.com.jtech.tasklist.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -19,6 +18,5 @@ public class TaskRequest {
     
     private Boolean completed = false;
     
-    @NotNull(message = "ID da lista é obrigatório")
     private UUID tasklistId;
 }
