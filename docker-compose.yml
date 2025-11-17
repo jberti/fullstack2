@@ -6,7 +6,7 @@ services:
     image: postgres:15-alpine
     container_name: tasklist-db
     environment:
-      POSTGRES_DB: sansys_database
+      POSTGRES_DB: tasklist-database
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
@@ -33,7 +33,7 @@ services:
       - PROFILE=dev
       - DS_URL=database
       - DS_PORT=5432
-      - DS_DATABASE=sansys_database
+      - DS_DATABASE=tasklist-database
       - DS_USER=postgres
       - DS_PASS=postgres
       - PORT=8080
