@@ -153,7 +153,7 @@
             color="error"
             variant="elevated"
             @click="deleteTasklist"
-            :disabled="selectedTasklist?.taskCount && selectedTasklist.taskCount > 0"
+            :disabled="Boolean(selectedTasklist?.taskCount && selectedTasklist.taskCount > 0)"
             :loading="isDeleting"
           >
             Excluir
