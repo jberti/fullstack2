@@ -100,7 +100,6 @@ docker-compose down -v
 ### DevOps
 - **Docker** - Containerização
 - **Docker Compose** - Orquestração
-- **Nginx** - Proxy reverso (produção)
 
 ## 📋 Funcionalidades
 
