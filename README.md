@@ -20,7 +20,7 @@ O script oferece duas opções:
 ```bash
 # Clone o repositório
 git clone https://github.com/jberti/fullstack2.git
-cd jtech-tasklist
+cd fullstack2
 
 # Iniciar serviços
 docker-compose up --build -d
@@ -37,7 +37,7 @@ docker-compose logs -f
 ```bash
 # Clone o repositório
 git clone https://github.com/jberti/fullstack2.git
-cd jtech-tasklist
+cd fullstack2
 
 # Iniciar em modo produção
 docker-compose -f docker-compose.prod.yml up --build -d
