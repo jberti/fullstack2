@@ -54,6 +54,7 @@ import type { Task } from '@/services/taskService'
 const props = defineProps<{
   modelValue: boolean
   task?: Task | null
+  tasklistId?: string
 }>()
 
 const emit = defineEmits<{
@@ -98,6 +99,13 @@ async function handleSave() {
   const { valid: isValid } = await form.value.validate()
   if (!isValid) return
 
+  // Verificar se temos um tasklistId válido
+  const tasklistId = props.task?.tasklistId || props.tasklistId
+  if (!tasklistId) {
+    tasksStore.error = 'Nenhuma lista selecionada. Por favor, selecione uma lista primeiro.'
+    return
+  }
+
   try {
     tasksStore.clearError()
     if (props.task?.id) {
@@ -105,12 +113,14 @@ async function handleSave() {
         title: title.value,
         description: description.value,
         completed: completed.value,
+        tasklistId: tasklistId,
       })
     } else {
       await tasksStore.createTask({
         title: title.value,
         description: description.value,
         completed: completed.value,
+        tasklistId: tasklistId,
       })
     }
     emit('update:modelValue', false)

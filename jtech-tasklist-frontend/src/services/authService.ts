@@ -13,8 +13,8 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   token: string
-  refreshToken: string
   type: string
+  user: User
 }
 
 export interface User {
@@ -34,7 +34,6 @@ class AuthService {
 
   logout(): void {
     localStorage.removeItem('token')
-    localStorage.removeItem('refreshToken')
   }
 
   getToken(): string | null {
@@ -43,10 +42,6 @@ class AuthService {
 
   setToken(token: string): void {
     localStorage.setItem('token', token)
-  }
-
-  setRefreshToken(refreshToken: string): void {
-    localStorage.setItem('refreshToken', refreshToken)
   }
 }
 

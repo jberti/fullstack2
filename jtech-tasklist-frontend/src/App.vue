@@ -80,6 +80,7 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '@/stores/auth'
@@ -88,13 +89,25 @@ const router = useRouter()
 const authStore = useAuthStore()
 const theme = useTheme()
 
+onMounted(async () => {
+  await authStore.initializeAuth()
+  
+  // Restaurar tema salvo
+  const savedTheme = localStorage.getItem('theme')
+  if (savedTheme) {
+    theme.global.name.value = savedTheme
+  }
+})
+
 function handleLogout() {
   authStore.logout()
   router.push('/login')
 }
 
 function toggleTheme() {
-  theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+  const newTheme = theme.global.current.value.dark ? 'light' : 'dark'
+  theme.global.name.value = newTheme
+  localStorage.setItem('theme', newTheme)
 }
 </script>
 

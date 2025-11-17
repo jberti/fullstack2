@@ -44,8 +44,7 @@ export default createVuetify({
   },
   defaults: {
     VCard: {
-      elevation: 0,
-      variant: 'outlined',
+      elevation: 2,
     },
     VBtn: {
       style: 'text-transform: none; font-weight: 500;',

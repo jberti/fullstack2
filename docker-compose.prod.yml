@@ -1,0 +1,83 @@
+version: '3.3'
+
+services:
+  # Banco de dados PostgreSQL
+  database:
+    image: postgres:15-alpine
+    container_name: tasklist-db-prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sansys_database}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./jtech-tasklist-backend/src/main/resources/db/migration:/docker-entrypoint-initdb.d/
+    networks:
+      - tasklist-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Backend Spring Boot
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: production
+    container_name: tasklist-backend-prod
+    environment:
+      - PROFILE=prod
+      - DS_URL=database
+      - DS_PORT=5432
+      - DS_DATABASE=${POSTGRES_DB:-sansys_database}
+      - DS_USER=${POSTGRES_USER:-postgres}
+      - DS_PASS=${POSTGRES_PASSWORD:-postgres}
+      - PORT=8080
+      - JWT_SECRET=${JWT_SECRET:-mySecretKeyForJWTTokenGenerationThatMustBeAtLeast256BitsLongForSecurity}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      - database
+    networks:
+      - tasklist-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Frontend Vue.js (Nginx)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: production
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8080/api/v1}
+    container_name: tasklist-frontend-prod
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - tasklist-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data_prod:
+
+networks:
+  tasklist-network:
+    driver: bridge

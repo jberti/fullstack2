@@ -1,19 +1,128 @@
-# Dockerfile para o Frontend (Vue.js)
-FROM node:20-alpine
+# Multi-stage Dockerfile para o Frontend (Vue.js)
+
+# Stage 1: Base com dependências
+FROM node:20-alpine AS base
+
+# Instalar ferramentas necessárias
+RUN apk add --no-cache git
 
 WORKDIR /app
 
-# Copiar package.json e package-lock.json
+# Copiar arquivos de configuração do npm
 COPY jtech-tasklist-frontend/package*.json ./
 
 # Instalar dependências
-RUN npm install
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Stage 2: Development
+FROM base AS development
+
+# Instalar todas as dependências (incluindo dev)
+RUN npm ci
 
 # Copiar código fonte
 COPY jtech-tasklist-frontend/ .
 
+# Criar usuário não-root
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup && \
+    chown -R appuser:appgroup /app
+
+USER appuser
+
 # Expor porta
 EXPOSE 5173
 
-# Comando para executar em modo desenvolvimento
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Healthcheck para desenvolvimento
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:5173 || exit 1
+
+# Comando para desenvolvimento com hot reload
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+
+# Stage 3: Build para produção
+FROM base AS builder
+
+# Instalar dependências de build
+RUN npm ci
+
+# Copiar código fonte
+COPY jtech-tasklist-frontend/ .
+
+# Argumentos de build
+ARG VITE_API_BASE_URL=http://localhost:8080/api/v1
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
+# Build da aplicação
+RUN npm run build
+
+# Stage 4: Production com Nginx
+FROM nginx:alpine AS production
+
+# Copiar configuração customizada do Nginx
+COPY <<EOF /etc/nginx/conf.d/default.conf
+server {
+    listen 80;
+    server_name localhost;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+    # Handle Vue.js routing
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # API proxy (opcional, se necessário)
+    location /api/ {
+        proxy_pass http://backend:8080;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+
+# Copiar arquivos buildados
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Criar usuário não-root
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup && \
+    chown -R appuser:appgroup /usr/share/nginx/html && \
+    chown -R appuser:appgroup /var/cache/nginx && \
+    chown -R appuser:appgroup /var/log/nginx && \
+    chown -R appuser:appgroup /etc/nginx/conf.d
+
+# Configurar Nginx para rodar como não-root
+RUN sed -i 's/user nginx;/user appuser;/' /etc/nginx/nginx.conf
+
+USER appuser
+
+# Expor porta
+EXPOSE 80
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:80 || exit 1
+
+# Comando para produção
+CMD ["nginx", "-g", "daemon off;"]

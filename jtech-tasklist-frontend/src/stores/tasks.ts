@@ -26,6 +26,19 @@ export const useTasksStore = defineStore(
       }
     }
 
+    async function fetchTasksByTasklist(tasklistId: string) {
+      isLoading.value = true
+      error.value = null
+      try {
+        tasks.value = await taskService.getByTasklist(tasklistId)
+      } catch (err: any) {
+        error.value = err.response?.data?.message || 'Erro ao carregar tarefas'
+        throw err
+      } finally {
+        isLoading.value = false
+      }
+    }
+
     async function createTask(taskData: TaskRequest) {
       isLoading.value = true
       error.value = null
@@ -75,11 +88,12 @@ export const useTasksStore = defineStore(
 
     async function toggleTask(id: string) {
       const task = tasks.value.find((t) => t.id === id)
-      if (task) {
+      if (task && task.tasklistId) {
         await updateTask(id, {
           title: task.title,
           description: task.description,
           completed: !task.completed,
+          tasklistId: task.tasklistId,
         })
       }
     }
@@ -96,6 +110,7 @@ export const useTasksStore = defineStore(
       pendingTasks,
       totalTasks,
       fetchTasks,
+      fetchTasksByTasklist,
       createTask,
       updateTask,
       deleteTask,

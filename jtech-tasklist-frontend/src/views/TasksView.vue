@@ -1,18 +1,33 @@
 <template>
-  <v-container fluid class="pa-6">
+  <div class="d-flex">
+    <!-- Sidebar -->
+    <TasklistSidebar />
+    
+    <!-- Main Content -->
+    <v-main>
+      <v-container fluid class="pa-6">
     <!-- Header Section with Modern Design -->
     <div class="d-flex align-center justify-space-between mb-8">
       <div>
         <h1 class="text-h4 font-weight-bold mb-2">
-          <v-icon color="primary" class="me-3">mdi-check-circle-outline</v-icon>
-          Minhas Tarefas
+          <v-avatar 
+            v-if="tasklistsStore.currentTasklist" 
+            size="32" 
+            :color="tasklistsStore.currentTasklist.color"
+            class="me-3"
+          >
+            <v-icon color="white" size="18">mdi-format-list-bulleted</v-icon>
+          </v-avatar>
+          <v-icon v-else color="primary" class="me-3">mdi-check-circle-outline</v-icon>
+          {{ tasklistsStore.currentTasklist?.name || 'Minhas Tarefas' }}
         </h1>
         <p class="text-body-1 text-medium-emphasis">
-          Gerencie suas tarefas de forma eficiente
+          {{ tasklistsStore.currentTasklist?.description || 'Gerencie suas tarefas de forma eficiente' }}
         </p>
       </div>
       
       <v-btn
+        v-if="tasklistsStore.currentTasklist"
         color="primary"
         size="large"
         variant="elevated"
@@ -140,9 +155,27 @@
         </v-window-item>
       </v-window>
 
-      <!-- Empty State -->
+      <!-- Empty State - No Tasklist Selected -->
       <div
-        v-if="!tasksStore.isLoading && tasksStore.tasks.length === 0"
+        v-if="!tasklistsStore.currentTasklist"
+        class="text-center pa-12"
+      >
+        <v-avatar size="120" color="surface-variant" class="mb-6">
+          <v-icon size="60" color="medium-emphasis">mdi-format-list-bulleted</v-icon>
+        </v-avatar>
+        
+        <h3 class="text-h5 font-weight-medium mb-2">
+          Selecione uma lista
+        </h3>
+        
+        <p class="text-body-1 text-medium-emphasis mb-6">
+          Escolha uma lista na barra lateral ou crie uma nova para começar
+        </p>
+      </div>
+
+      <!-- Empty State - No Tasks -->
+      <div
+        v-else-if="!tasksStore.isLoading && tasksStore.tasks.length === 0"
         class="text-center pa-12"
       >
         <v-avatar size="120" color="surface-variant" class="mb-6">
@@ -171,33 +204,60 @@
     </v-card>
 
     <!-- Dialogs -->
-    <TaskDialog v-model="dialog" @task-saved="handleTaskSaved" />
-    <TaskDialog v-model="editDialog" :task="selectedTask" @task-saved="handleTaskSaved" />
-  </v-container>
+    <TaskDialog 
+      v-model="dialog" 
+      :tasklist-id="tasklistsStore.currentTasklist?.id"
+      @task-saved="handleTaskSaved" 
+    />
+    <TaskDialog 
+      v-model="editDialog" 
+      :task="selectedTask" 
+      @task-saved="handleTaskSaved" 
+    />
+      </v-container>
+    </v-main>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useTasksStore } from '@/stores/tasks'
+import { useTasklistsStore } from '@/stores/tasklists'
 import TaskList from '@/components/TaskList.vue'
 import TaskDialog from '@/components/TaskDialog.vue'
+import TasklistSidebar from '@/components/TasklistSidebar.vue'
 import type { Task } from '@/services/taskService'
 
 const tasksStore = useTasksStore()
+const tasklistsStore = useTasklistsStore()
 const tab = ref('all')
 const dialog = ref(false)
 const editDialog = ref(false)
 const selectedTask = ref<Task | null>(null)
 
 onMounted(async () => {
-  await tasksStore.fetchTasks()
+  await tasklistsStore.fetchTasklists()
 })
+
+// Watch for changes in current tasklist and fetch tasks accordingly
+watch(() => tasklistsStore.currentTasklist, async (currentTasklist) => {
+  if (currentTasklist) {
+    await tasksStore.fetchTasksByTasklist(currentTasklist.id)
+  }
+}, { immediate: true })
 
 function handleTaskSaved() {
   dialog.value = false
   editDialog.value = false
   selectedTask.value = null
-  tasksStore.fetchTasks()
+  
+  // Refresh tasks for current tasklist
+  if (tasklistsStore.currentTasklist) {
+    tasksStore.fetchTasksByTasklist(tasklistsStore.currentTasklist.id)
+  }
+  
+  // Refresh tasklists to update counters
+  tasklistsStore.fetchTasklists()
 }
 
 function handleEdit(task: Task) {

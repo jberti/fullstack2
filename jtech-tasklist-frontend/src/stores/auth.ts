@@ -11,7 +11,27 @@ export const useAuthStore = defineStore(
     const isLoading = ref(false)
     const error = ref<string | null>(null)
 
-    const isAuthenticated = computed(() => !!token.value && !!user.value)
+    const isAuthenticated = computed(() => !!token.value)
+
+    // Initialize user from token if available
+    async function initializeAuth() {
+      if (token.value && !user.value) {
+        try {
+          // Decode token to get user info or make a request to get user profile
+          // For now, we'll assume the token is valid and set a basic user
+          // In a real app, you'd make a request to /me endpoint
+          const tokenPayload = JSON.parse(atob(token.value.split('.')[1]))
+          user.value = {
+            id: tokenPayload.sub,
+            name: tokenPayload.name || 'Usuário',
+            email: tokenPayload.email || 'user@example.com'
+          }
+        } catch (err) {
+          // Token is invalid, clear it
+          logout()
+        }
+      }
+    }
 
     async function register(data: RegisterRequest) {
       isLoading.value = true
@@ -20,15 +40,7 @@ export const useAuthStore = defineStore(
         const response = await authService.register(data)
         token.value = response.token
         authService.setToken(response.token)
-        authService.setRefreshToken(response.refreshToken)
-        
-        // Decodificar token para obter informações do usuário
-        const payload = JSON.parse(atob(response.token.split('.')[1]))
-        user.value = {
-          id: payload.sub,
-          name: data.name,
-          email: data.email,
-        }
+        user.value = response.user
         return response
       } catch (err: any) {
         error.value = err.response?.data?.message || 'Erro ao registrar usuário'
@@ -45,15 +57,7 @@ export const useAuthStore = defineStore(
         const response = await authService.login(data)
         token.value = response.token
         authService.setToken(response.token)
-        authService.setRefreshToken(response.refreshToken)
-        
-        // Decodificar token para obter informações do usuário
-        const payload = JSON.parse(atob(response.token.split('.')[1]))
-        user.value = {
-          id: payload.sub,
-          email: data.email,
-          name: '', // O nome não vem no login, precisaríamos buscar do backend
-        }
+        user.value = response.user
         return response
       } catch (err: any) {
         error.value = err.response?.data?.message || 'Email ou senha inválidos'
@@ -80,6 +84,7 @@ export const useAuthStore = defineStore(
       isLoading,
       error,
       isAuthenticated,
+      initializeAuth,
       register,
       login,
       logout,

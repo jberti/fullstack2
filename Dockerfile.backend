@@ -1,12 +1,14 @@
-# Dockerfile para o Backend (Spring Boot)
-FROM amazoncorretto:21
+# Multi-stage Dockerfile para o Backend (Spring Boot)
 
-# Instalar curl e netstat para debug
-RUN yum update -y && yum install -y curl net-tools && yum clean all
+# Stage 1: Build
+FROM amazoncorretto:21-alpine AS builder
+
+# Instalar ferramentas necessárias
+RUN apk add --no-cache bash
 
 WORKDIR /app
 
-# Copiar arquivos do Gradle
+# Copiar arquivos do Gradle (cache de dependências)
 COPY jtech-tasklist-backend/gradle/ gradle/
 COPY jtech-tasklist-backend/gradlew .
 COPY jtech-tasklist-backend/gradlew.bat .
@@ -16,31 +18,68 @@ COPY jtech-tasklist-backend/gradle.properties .
 # Dar permissão de execução ao gradlew
 RUN chmod +x ./gradlew
 
+# Download das dependências (cache layer)
+RUN ./gradlew dependencies --no-daemon
+
 # Copiar código fonte
 COPY jtech-tasklist-backend/src/ src/
 
 # Build da aplicação
 RUN ./gradlew clean bootJar -x test --no-daemon
 
-# Debug: Listar arquivos JAR
-RUN echo "=== Arquivos JAR gerados ===" && ls -la build/libs/
-
-# Copiar o JAR principal
+# Encontrar e renomear o JAR
 RUN JAR_NAME=$(ls build/libs/ | grep -v plain | head -1) && \
-    echo "Copiando JAR: $JAR_NAME" && \
+    echo "JAR encontrado: $JAR_NAME" && \
     cp "build/libs/$JAR_NAME" app.jar
 
-# Verificar se o JAR foi criado
-RUN ls -la app.jar && echo "JAR criado com sucesso!"
+# Stage 2: Production Runtime
+FROM amazoncorretto:21-alpine AS production
+
+# Instalar ferramentas para healthcheck
+RUN apk add --no-cache wget curl
+
+# Criar usuário não-root para segurança
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+WORKDIR /app
+
+# Copiar JAR do stage de build
+COPY --from=builder /app/app.jar app.jar
+
+# Criar diretório de logs
+RUN mkdir -p logs && chown -R appuser:appgroup /app
+
+# Mudar para usuário não-root
+USER appuser
 
 # Expor porta
 EXPOSE 8080
 
-# Configurar variáveis de ambiente
-ENV JAVA_OPTS="-Xmx512m -Xms256m"
+# Configurar variáveis de ambiente otimizadas
+ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC -XX:+UseStringDeduplication -Djava.security.egd=file:/dev/./urandom"
 ENV SPRING_PROFILES_ACTIVE=dev
 ENV SERVER_PORT=8080
-ENV LOGGING_LEVEL_ROOT=INFO
 
-# Comando para executar a aplicação com logs mais verbosos
-CMD ["sh", "-c", "echo 'Iniciando Spring Boot...' && java $JAVA_OPTS -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Dserver.port=$SERVER_PORT -Dlogging.level.root=$LOGGING_LEVEL_ROOT -Dlogging.level.org.springframework.boot=INFO -jar app.jar"]
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
+# Comando otimizado para produção
+CMD ["sh", "-c", "echo 'Iniciando JTech TaskList Backend...' && java $JAVA_OPTS -jar app.jar"]
+
+# Stage 3: Development (com ferramentas de debug) - DEFAULT
+FROM production AS development
+
+# Voltar para root para instalar ferramentas de debug
+USER root
+
+# Instalar ferramentas de desenvolvimento
+RUN apk add --no-cache net-tools procps htop
+
+# Voltar para usuário não-root
+USER appuser
+
+# Configurações de desenvolvimento
+ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC -Djava.security.egd=file:/dev/./urandom -Dspring.devtools.restart.enabled=true"
+ENV LOGGING_LEVEL_ROOT=DEBUG

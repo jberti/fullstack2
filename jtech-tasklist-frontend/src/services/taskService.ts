@@ -5,7 +5,8 @@ export interface Task {
   title: string
   description?: string
   completed: boolean
-  userId?: string
+  tasklistId?: string
+  tasklistName?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -14,11 +15,16 @@ export interface TaskRequest {
   title: string
   description?: string
   completed?: boolean
+  tasklistId: string
 }
 
 class TaskService {
   async getAll(): Promise<Task[]> {
     return api.get<Task[]>('/tasks')
+  }
+
+  async getByTasklist(tasklistId: string): Promise<Task[]> {
+    return api.get<Task[]>(`/tasklists/${tasklistId}/tasks`)
   }
 
   async getById(id: string): Promise<Task> {
