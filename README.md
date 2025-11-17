@@ -115,57 +115,6 @@ docker-compose down -v
 
 ---
 
-**Desenvolvido com ❤️ pela equipe J
-# 2. Execute o script de inicialização
-# Windows
-./docker-start.bat
-
-# Linux/macOS
-chmod +x docker-start.sh
-./docker-start.sh
-```
-
-### Opção 2: Execução Manual
-
-```bash
-# 1. Clone o repositório
-git clone <repository-url>
-cd jtech-tasklist
-
-# 2. Construir e iniciar os serviços
-docker-compose up --build -d
-
-# 3. Verificar status dos serviços
-docker-compose ps
-
-# 4. Visualizar logs (opcional)
-docker-compose logs -f
-```
-
-### Opção 3: Desenvolvimento Local (Sem Docker)
-
-#### Backend
-```bash
-cd jtech-tasklist-backend
-
-# Instalar dependências e executar
-./gradlew bootRun
-
-# Ou com perfil específico
-./gradlew bootRun --args='--spring.profiles.active=dev'
-```
-
-#### Frontend
-```bash
-cd jtech-tasklist-frontend
-
-# Instalar dependências
-npm install
-
-# Executar em modo desenvolvimento
-npm run dev
-```
-
 ### URLs de Acesso
 
 | Serviço | URL | Descrição |
