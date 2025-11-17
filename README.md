@@ -1,4 +1,4 @@
-# JTech TaskList
+# J-Tech TaskList
 
 Sistema de gerenciamento de tarefas desenvolvido com Spring Boot (backend) e Vue.js (frontend).
 
@@ -459,6 +459,7 @@ jtech-tasklist-frontend/
 - [ ] **Análise Estática**: SonarQube integration
 - [ ] **Performance Testing**: JMeter/Artillery
 - [ ] **Security Testing**: OWASP ZAP integration
+- [ ] Corrigir Swagger para mostrar documentações
 
 #### 2. Funcionalidades Core
 - [ ] **Notificações Push**: WebSocket integration
